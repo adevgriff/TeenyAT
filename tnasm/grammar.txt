@@ -3,6 +3,7 @@ lang ::= loc EOL.
 loc ::= variable_line.
 loc ::= constant_line.
 loc ::= raw_line.
+loc ::= include_line.
 loc ::= label_line.
 loc ::= code_1_line.
 loc ::= code_2_line.
@@ -25,6 +26,8 @@ constant_line ::= CONSTANT IDENTIFIER immediate.
 
 raw_line ::= raw_line number.
 raw_line ::= number.
+
+include_line ::= INCLUDE STRING
 
 label_line ::= LABEL.
 

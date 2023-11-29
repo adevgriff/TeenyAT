@@ -16,37 +16,34 @@
 /*
  * Uncomment the definition below to trace the lexer
  */
-//#define DEBUG_TRACE
+// #define DEBUG_TRACE
 
 using namespace std;
 
 typedef void (*token_handler_ptr)(token &);
 
-struct token_regex {
+struct token_regex
+{
 	regex expr;
 	token_type id;
 	token_handler_ptr handler;
 };
 
+vector<tny_word> bin_words;
 
-vector <tny_word> bin_words;
-
-
-void read_file(const string path, vector <string> &asm_lines);
-void initialize_lexical_regex(vector <token_regex> &patterns);
-token get_token(const vector <token_regex>& patterns, const string& s, int line_no);
+void read_file(const string path, vector<string> &asm_lines);
+void initialize_lexical_regex(vector<token_regex> &patterns);
+token get_token(const vector<token_regex> &patterns, const string &s, int line_no);
 void tokenize_line(
-	string asm_line,
-	token_line &token_line,
-	vector <token_regex> &patterns,
-	int line_no
-);
+	 string asm_line,
+	 token_line &token_line,
+	 vector<token_regex> &patterns,
+	 int line_no);
 void tokenize_all_lines(
-	token_lines &token_lines,
-	vector <string> &asm_lines,
-	vector <token_regex> &patterns
-);
-void debug_print_lexed_input(token_lines &token_lines, vector <string> &asm_lines);
+	 token_lines &token_lines,
+	 vector<string> &asm_lines,
+	 vector<token_regex> &patterns);
+void debug_print_lexed_input(token_lines &token_lines, vector<string> &asm_lines);
 
 tny_sword string_to_value(string s, tny_sword base);
 
@@ -57,15 +54,18 @@ void handle_register(token &t);
 void handle_decimal_number(token &t);
 void handle_prefixed_number(token &t);
 
-int main(int argc, char *argv[]) {
-	if(argc != 2) {
+int main(int argc, char *argv[])
+{
+	if (argc != 2)
+	{
 		cerr << "Usage:   tnasm <file>" << endl;
 		exit(EXIT_FAILURE);
 	}
 
 	filesystem::path asm_filename(argv[1]);
 
-	if(asm_filename.extension() != ".asm") {
+	if (asm_filename.extension() != ".asm")
+	{
 		cerr << "Expected a \".asm\" file..." << endl;
 		cerr << "Usage:   tnasm <file>" << endl;
 		exit(EXIT_FAILURE);
@@ -73,41 +73,45 @@ int main(int argc, char *argv[]) {
 
 	filesystem::path bin_filename = asm_filename.filename().replace_extension(".bin");
 
-	vector <string> asm_lines;
+	vector<string> asm_lines;
 	read_file(asm_filename.string(), asm_lines);
 
-	vector <token_regex> patterns;
+	vector<token_regex> patterns;
 	initialize_lexical_regex(patterns);
 
 	token_lines token_lines;
 	tokenize_all_lines(token_lines, asm_lines, patterns);
-	#ifdef DEBUG_TRACE
+#ifdef DEBUG_TRACE
 	cerr << "\n\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n\n";
 	debug_print_lexed_input(token_lines, asm_lines);
-	#endif /* DEBUG_TRACE */
+#endif /* DEBUG_TRACE */
 
-	if(parse(token_lines, asm_lines)) {
+	if (parse(token_lines, asm_lines))
+	{
 		ofstream bin_file(bin_filename, ios::binary);
-		bin_file.write(reinterpret_cast<const char*>(bin_words.data()), bin_words.size() * sizeof(tny_word));
+		bin_file.write(reinterpret_cast<const char *>(bin_words.data()), bin_words.size() * sizeof(tny_word));
 		generate_listing();
-    }
-    else {
-        cerr << "There were errors.  No binary output." << endl;
-    }
-
+	}
+	else
+	{
+		cerr << "There were errors.  No binary output." << endl;
+	}
 
 	return EXIT_SUCCESS;
 }
 
-
-void read_file(const string path, vector <string> &asm_lines) {
+void read_file(const string path, vector<string> &asm_lines)
+{
 	ifstream f(path);
 	string s;
-	while(getline(f, s)) {
+	while (getline(f, s))
+	{
 		/* lowercase all input to achieve case-insensitivity */
-		for(auto &c : s) {
-			if(isupper(c)) {
-				c = c- 'A' + 'a';
+		for (auto &c : s)
+		{
+			if (isupper(c))
+			{
+				c = c - 'A' + 'a';
 			}
 		}
 		asm_lines.push_back(s);
@@ -117,8 +121,8 @@ void read_file(const string path, vector <string> &asm_lines) {
 	return;
 }
 
-
-token_regex regex_token(string s, token_type id, token_handler_ptr handler) {
+token_regex regex_token(string s, token_type id, token_handler_ptr handler)
+{
 	token_regex tr;
 	tr.expr = regex(s, regex_constants::icase);
 	tr.id = id;
@@ -127,12 +131,15 @@ token_regex regex_token(string s, token_type id, token_handler_ptr handler) {
 	return tr;
 }
 
-void initialize_lexical_regex(vector <token_regex> &patterns) {
-    patterns.push_back(regex_token("[ \\t\\b\\v\\f\\r]+", T_IGNORE, nullptr));
+void initialize_lexical_regex(vector<token_regex> &patterns)
+{
+	patterns.push_back(regex_token("[ \\t\\b\\v\\f\\r]+", T_IGNORE, nullptr));
 	patterns.push_back(regex_token(";.*", T_IGNORE, nullptr));
 	patterns.push_back(regex_token("![^ \\t\\b\\v\\r\\n;]+", T_LABEL, nullptr));
 	patterns.push_back(regex_token("\\.const(ant)?", T_CONSTANT, nullptr));
 	patterns.push_back(regex_token("\\.var(iable)?", T_VARIABLE, nullptr));
+	patterns.push_back(regex_token("\\.incl(ude)?", T_INCLUDE, nullptr));
+	patterns.push_back(regex_token("\".*\"", T_STRING, nullptr));
 	patterns.push_back(regex_token("(pc)|(sp)|(rz)", T_REGISTER, handle_register));
 	patterns.push_back(regex_token("r[a-e0-7]", T_REGISTER, handle_register));
 	patterns.push_back(regex_token("set", T_SET, nullptr));
@@ -182,67 +189,76 @@ void initialize_lexical_regex(vector <token_regex> &patterns) {
 	return;
 }
 
-
-token get_token(const vector <token_regex>& patterns, const string& s, int line_no) {
+token get_token(const vector<token_regex> &patterns, const string &s, int line_no)
+{
 	token t;
 	t.line_no = line_no;
 	int longest = 0;
 
-	#ifdef DEBUG_TRACE
+#ifdef DEBUG_TRACE
 	string tok = "NO MATCHING TOKEN"; // should NEVER see this
-	#endif /* DEBUG_TRACE */
+#endif										 /* DEBUG_TRACE */
 
 	token_handler_ptr handler = nullptr;
 
-	for (const auto &pattern : patterns) {
+	for (const auto &pattern : patterns)
+	{
 		smatch match;
-		if (regex_search(s, match, pattern.expr, regex_constants::match_continuous)) {
+		if (regex_search(s, match, pattern.expr, regex_constants::match_continuous))
+		{
 			int length = match.length();
-			if (length > longest) {
+			if (length > longest)
+			{
 				longest = length;
 				t.id = pattern.id;
 				t.token_str = s.substr(0, longest);
 				handler = pattern.handler;
 
-				#ifdef DEBUG_TRACE
+#ifdef DEBUG_TRACE
 				tok = tstr[pattern.id];
-				#endif /* DEBUG_TRACE */
+#endif /* DEBUG_TRACE */
 			}
 		}
 	}
 
-	if(handler != nullptr) {
+	if (handler != nullptr)
+	{
 		handler(t);
 	}
 
-	#ifdef DEBUG_TRACE
+#ifdef DEBUG_TRACE
 	cerr << "Line " << line_no << ": " << tok << " matched \"";
-	if(s.length() <= 10) {
+	if (s.length() <= 10)
+	{
 		cerr << s;
 	}
-	else {
+	else
+	{
 		cerr << s.substr(0, 10) << "...";
 	}
-	cerr << "\"" << " as \"" << t.token_str << "\"" << endl;
-	#endif /* DEBUG_TRACE */
+	cerr << "\""
+		  << " as \"" << t.token_str << "\"" << endl;
+#endif /* DEBUG_TRACE */
 
 	return t;
 }
 
-
 void tokenize_line(
-	string asm_line,
-	token_line &token_line,
-	vector <token_regex> &patterns,
-	int line_no
-) {
+	 string asm_line,
+	 token_line &token_line,
+	 vector<token_regex> &patterns,
+	 int line_no)
+{
 	string s(asm_line);
-	while(s.length() > 0) {
-        token t = get_token(patterns, s, line_no);
-		if(t.id != T_IGNORE && t.id != T_BAD) {
+	while (s.length() > 0)
+	{
+		token t = get_token(patterns, s, line_no);
+		if (t.id != T_IGNORE && t.id != T_BAD)
+		{
 			token_line.push_back(t);
-        }
-        else if(t.id == T_BAD) {
+		}
+		else if (t.id == T_BAD)
+		{
 			cerr << " Line " << line_no << ": Unexpected character '";
 			cerr << t.token_str << "'" << endl;
 			exit(EXIT_FAILURE);
@@ -255,16 +271,17 @@ void tokenize_line(
 	return;
 }
 
-
 void tokenize_all_lines(
-	token_lines &token_lines,
-	vector <string> &asm_lines,
-	vector <token_regex> &patterns
-) {
-		for(unsigned int i = 0; i < asm_lines.size(); i++) {
+	 token_lines &token_lines,
+	 vector<string> &asm_lines,
+	 vector<token_regex> &patterns)
+{
+	for (unsigned int i = 0; i < asm_lines.size(); i++)
+	{
 		token_line token_line;
 		tokenize_line(asm_lines[i], token_line, patterns, i + 1);
-		if(token_line.size() > 0) {
+		if (token_line.size() > 0)
+		{
 			token t;
 			t.id = T_EOL;
 			t.line_no = i + 1;
@@ -276,19 +293,22 @@ void tokenize_all_lines(
 	return;
 }
 
-
-void debug_print_lexed_input(token_lines &token_lines, vector <string> &asm_lines) {
+void debug_print_lexed_input(token_lines &token_lines, vector<string> &asm_lines)
+{
 	int current_i = 1;
-	for(unsigned int i = 0; i < token_lines.size(); i++) {
+	for (unsigned int i = 0; i < token_lines.size(); i++)
+	{
 		token_line line = token_lines[i];
 		/* catch up current line to wherever this token was */
-		while(current_i < line[0].line_no) {
+		while (current_i < line[0].line_no)
+		{
 			cerr << current_i << ": " << asm_lines[current_i - 1] << endl;
 			current_i++;
 		}
 
 		cerr << current_i << ":";
-		for(auto t: line) {
+		for (auto t : line)
+		{
 			cerr << "  " << tstr[t.id];
 		}
 		cerr << endl;
@@ -297,13 +317,15 @@ void debug_print_lexed_input(token_lines &token_lines, vector <string> &asm_line
 	return;
 }
 
-
-tny_sword string_to_value(string s, tny_sword base) {
+tny_sword string_to_value(string s, tny_sword base)
+{
 	const char table[] = "0123456789abcdef";
 	tny_sword result = 0;
 
-	for(auto c : s) {
-		if(c != '_') {
+	for (auto c : s)
+	{
+		if (c != '_')
+		{
 			result *= base;
 			result += (strchr(table, tolower(c)) - table) / sizeof(char);
 		}
@@ -312,27 +334,33 @@ tny_sword string_to_value(string s, tny_sword base) {
 	return result;
 }
 
-
-void handle_register(token &t) {
+void handle_register(token &t)
+{
 	/*
 	 * "(PC)|(SP)|(rZ)"
 	 * "r[A-E0-7]"
 	 */
 	string &s = t.token_str;
-	if(s == "pc") {
+	if (s == "pc")
+	{
 		t.value.u = TNY_REG_PC;
 	}
-	else if(s == "sp") {
+	else if (s == "sp")
+	{
 		t.value.u = TNY_REG_SP;
 	}
-	else if(s == "rz") {
+	else if (s == "rz")
+	{
 		t.value.u = TNY_REG_ZERO;
 	}
-	else if(s[0] == 'r') {
-		if(isdigit(s[1])) {
+	else if (s[0] == 'r')
+	{
+		if (isdigit(s[1]))
+		{
 			t.value.u = (int)(s[1] - '0');
 		}
-		else {
+		else
+		{
 			t.value.u = (int)(s[1] - 'A') + TNY_REG_A;
 		}
 	}
@@ -340,8 +368,8 @@ void handle_register(token &t) {
 	return;
 }
 
-
-void handle_decimal_number(token &t) {
+void handle_decimal_number(token &t)
+{
 	/*
 	 * "[0-9](_*[0-9])*"
 	 */
@@ -350,14 +378,15 @@ void handle_decimal_number(token &t) {
 	return;
 }
 
-
-void handle_prefixed_number(token &t) {
+void handle_prefixed_number(token &t)
+{
 	/*
 	 * 0x(_*[0-9a-f])+
- 	 * 0b(_*[01])+
+	 * 0b(_*[01])+
 	 */
-	tny_sword base = 0;  // 0 is a bad base
-	switch(t.token_str[1]) {
+	tny_sword base = 0; // 0 is a bad base
+	switch (t.token_str[1])
+	{
 	case 'x':
 	case 'X':
 		base = 16;
@@ -370,10 +399,12 @@ void handle_prefixed_number(token &t) {
 		break;
 	}
 
-	if(base != 0) {
+	if (base != 0)
+	{
 		t.value.s = string_to_value(t.token_str, base);
 	}
-	else {
+	else
+	{
 		t.value.s = 0;
 	}
 

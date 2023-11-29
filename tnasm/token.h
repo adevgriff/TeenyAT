@@ -6,12 +6,15 @@
 
 using namespace std;
 
-enum token_type {
+enum token_type
+{
     T_IGNORE = 0,
     T_EOL,
     T_LABEL,
     T_CONSTANT,
     T_VARIABLE,
+    T_INCLUDE,
+    T_STRING,
     T_REGISTER,
     T_SET,
     T_LOD,
@@ -62,6 +65,8 @@ inline string tstr[] = {
     "T_LABEL",
     "T_CONSTANT",
     "T_VARIABLE",
+    "T_INCLUDE",
+    "T_STRING",
     "T_REGISTER",
     "T_SET",
     "T_LOD",
@@ -103,10 +108,10 @@ inline string tstr[] = {
     "T_COMMA",
     "T_LBRACKET",
     "T_RBRACKET",
-    "T_BAD"
-};
+    "T_BAD"};
 
-struct token {
+struct token
+{
     token_type id;
     string token_str;
     int line_no;
@@ -114,13 +119,14 @@ struct token {
     tny_word value;
 };
 
-typedef vector <token> token_line;
-typedef vector <token_line> token_lines;
+typedef vector<token> token_line;
+typedef vector<token_line> token_lines;
 
-struct symbol {
-	int line_no;
-	string str;
-	tny_word data;
+struct symbol
+{
+    int line_no;
+    string str;
+    tny_word data;
 };
 
 #endif /* __TOKEN_H__ */
