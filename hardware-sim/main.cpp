@@ -137,16 +137,17 @@ void bus_read(teenyat *t, tny_uword addr, tny_word *data, uint16_t *delay)
 
 void bus_write(teenyat *t, tny_uword addr, tny_word data, uint16_t *delay)
 {
-   std::cout << "write to address " << addr << " with data " << data.u << std::endl;
-   for (int i = 0; i < 16; i++)
-   {
-      if ((addr >> i) % 2)
+   if(addr > 0x7999) {
+      for (int i = 0; i < 16; i++)
       {
-         digitalWrite(i, HIGH);
-      }
-      else
-      {
-         digitalWrite(i, LOW);
+         if ((data.u >> i) % 2)
+         {
+            digitalWrite(i, HIGH);
+         }
+         else
+         {
+            digitalWrite(i, LOW);
+         }
       }
    }
 
