@@ -74,6 +74,36 @@ bool tny_init_from_file(teenyat *t, FILE *bin_file,
 	return true;
 }
 
+bool tny_init_from_unsigned_char_array(teenyat *t, unsigned char *bin, unsigned int bin_size,
+										TNY_READ_FROM_BUS_FNPTR bus_read,
+										TNY_WRITE_TO_BUS_FNPTR bus_write) {
+	if(!t) return false;
+	t->initialized = false;
+	if(!bin) return false;
+	if(bin_size / 2 > TNY_RAM_SIZE) return false;
+	if(!bus_read || !bus_write) return false;
+
+	/* Clear the entire instance */
+	memset(t, 0, sizeof(teenyat));
+
+	/* backup .bin file */
+	for(int i = 0; i < (bin_size/2); i++) {
+		t->bin_image[i].u  = bin[(i * 2) + 1];
+		t->bin_image[i].u  <<= 8;
+		t->bin_image[i].u  &= bin[(i * 2)];
+	}
+
+	/* store bus callbacks */
+	t->bus_read = bus_read;
+	t->bus_write = bus_write;
+
+	if(!tny_reset(t)) return false;
+
+	t->initialized = true;
+	
+	return true;
+}
+
 bool tny_reset(teenyat *t) {
 	if(!t) return false;
 
