@@ -8,6 +8,8 @@
 #ifndef __TEENYAT_H__
 #define __TEENYAT_H__
 
+//#define TNY_CUSTOM_DEBUG
+
 #ifndef __cplusplus
 
 #include <stdbool.h>
@@ -75,6 +77,19 @@ typedef void(*TNY_READ_FROM_BUS_FNPTR)(teenyat *t, tny_uword addr, tny_word *dat
  */
 typedef void(*TNY_WRITE_TO_BUS_FNPTR)(teenyat *t, tny_uword addr, tny_word data, uint16_t *delay);
 
+/**
+ * @brief
+ *   System callback function to handle TeenyAT debug statements in a convienent way
+ *   for the system writer requires the TNY_CUSTOM_DEBUG define
+ *
+ * @param t
+ *   teenyat instance the custom debug callback will be added to
+ * 
+ * @param debug_msg
+ *   The message to be output as designed by the system writer
+ */
+typedef void(*TNY_DEBUG)(teenyat *t, char *debug_msg);
+
 /** While the TeenyAT has a 16 bit address space, RAM is only 32K words */
 #define TNY_RAM_SIZE (1 << 15)
 #define TNY_MAX_RAM_ADDRESS (TNY_RAM_SIZE - 1)
@@ -101,7 +116,6 @@ union tny_word {
 		tny_uword byte0 : 8;
 		tny_uword byte1 : 8;
 	} bytes;
-
 	tny_uword u;
 	tny_sword s;
 
@@ -162,13 +176,18 @@ struct teenyat {
 		bool greater;
 	} flags;
 	/**
-	 * System calllback function to handle TeenyAT read requests
+	 * System callback function to handle TeenyAT read requests
 	 */
 	TNY_READ_FROM_BUS_FNPTR bus_read;
 	/**
-	 * System calllback function to handle TeenyAT write requests
+	 * System callback function to handle TeenyAT write requests
 	 */
 	TNY_WRITE_TO_BUS_FNPTR bus_write;
+	/**
+	 * System callback function to handle TeenyAT debug statements in a convenient way
+	 * for the system writer.
+	 */
+	TNY_DEBUG system_debug;
 	/**
 	 * The number of remaining cycles to delay to simulate the cost of the
 	 * previous instruction.
@@ -246,6 +265,50 @@ struct teenyat {
 bool tny_init_from_file(teenyat *t, FILE *bin_file,
                         TNY_READ_FROM_BUS_FNPTR bus_read,
                         TNY_WRITE_TO_BUS_FNPTR bus_write);
+
+/**
+ * @brief
+ *   Initialize a TeenyAT instance and buffer the file for future resets.
+ *
+ * @param t
+ *   The TeenyAT instance to initialize
+ *
+ * @param bin
+ *   unsigned char array containing the assembled binary of teenyat code
+ *   to run.
+ * 
+ * @param bin_size
+ *   size of the binary assembled teenyat code in bytes
+ *
+ * @param bus_read
+ *   Callback function for handling read requests
+ *
+ * @param bus_write
+ *   Callback function for handling write requests
+ *
+ * @return
+ *   True on success, flase otherwise.
+ *
+ * @note
+ *   Upon failed initialization, the t->initialized member can be assumed false,
+ *   but the state of all other members is undefined.
+ */
+bool tny_init_from_unsigned_char_array(teenyat *t, unsigned char *bin, unsigned int bin_size,
+										TNY_READ_FROM_BUS_FNPTR bus_read,
+										TNY_WRITE_TO_BUS_FNPTR bus_write);
+
+/**
+ * @brief
+ *   Initializes debugging to use a systems custom debugger
+ * 
+ * @param t
+ *   The TeenyAT instance that uses this custom debugging function
+ * 
+ * @param system_debug
+ * 	 Function pointer of type TNY_DEBUG that will be used from this point on
+ *   for the teenyat instances debugging.
+*/
+void tny_init_custom_debug(teenyat *t, TNY_DEBUG system_debug);
 
 /**
  * @brief

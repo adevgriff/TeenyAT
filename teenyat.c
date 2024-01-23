@@ -104,6 +104,12 @@ bool tny_init_from_unsigned_char_array(teenyat *t, unsigned char *bin, unsigned 
 	return true;
 }
 
+void tny_init_custom_debug(teenyat *t, TNY_DEBUG system_debug) {
+	t->system_debug = system_debug;
+
+	return;
+}
+
 bool tny_reset(teenyat *t) {
 	if(!t) return false;
 
@@ -459,8 +465,12 @@ void tny_clock(teenyat *t) {
 		}
 		break;
 	default:
+#ifndef TNY_CUSTOM_DEBUG
 		fprintf(stderr, "Unknown opcode (%d) encountered at 0x%04X on cycle %" PRIu64 "\n",
 		        opcode, orig_PC, t->cycle_cnt);
+#else
+		t->system_debug(t, "Unknown opcode encountered");
+#endif
 		break;
 	}
 
