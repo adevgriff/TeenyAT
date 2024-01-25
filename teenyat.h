@@ -8,7 +8,7 @@
 #ifndef __TEENYAT_H__
 #define __TEENYAT_H__
 
-//#define TNY_CUSTOM_DEBUG
+#define TNY_CUSTOM_LOGGER
 
 #ifndef __cplusplus
 
@@ -79,16 +79,16 @@ typedef void(*TNY_WRITE_TO_BUS_FNPTR)(teenyat *t, tny_uword addr, tny_word data,
 
 /**
  * @brief
- *   System callback function to handle TeenyAT debug statements in a convienent way
- *   for the system writer requires the TNY_CUSTOM_DEBUG define
+ *   System callback function to handle TeenyAT logging statements in a convienent way
+ *   for the system writer requires the TNY_CUSTOM_LOGGER define
  *
  * @param t
- *   teenyat instance the custom debug callback will be added to
+ *   teenyat instance the custom logging callback will be added to
  * 
- * @param debug_msg
+ * @param log_msg
  *   The message to be output as designed by the system writer
  */
-typedef void(*TNY_DEBUG)(teenyat *t, char *debug_msg);
+typedef void(*TNY_LOG)(teenyat *t, char *log_msg);
 
 /** While the TeenyAT has a 16 bit address space, RAM is only 32K words */
 #define TNY_RAM_SIZE (1 << 15)
@@ -184,10 +184,10 @@ struct teenyat {
 	 */
 	TNY_WRITE_TO_BUS_FNPTR bus_write;
 	/**
-	 * System callback function to handle TeenyAT debug statements in a convenient way
+	 * System callback function to handle TeenyAT logging statements in a convenient way
 	 * for the system writer.
 	 */
-	TNY_DEBUG system_debug;
+	TNY_LOG system_log;
 	/**
 	 * The number of remaining cycles to delay to simulate the cost of the
 	 * previous instruction.
@@ -299,16 +299,16 @@ bool tny_init_from_unsigned_char_array(teenyat *t, unsigned char *bin, unsigned 
 
 /**
  * @brief
- *   Initializes debugging to use a systems custom debugger
+ *   Initializes logging to use a systems custom logger
  * 
  * @param t
- *   The TeenyAT instance that uses this custom debugging function
+ *   The TeenyAT instance that uses this custom logging function
  * 
- * @param system_debug
- * 	 Function pointer of type TNY_DEBUG that will be used from this point on
- *   for the teenyat instances debugging.
+ * @param system_log
+ * 	 Function pointer of type TNY_LOG that will be used from this point on
+ *   for the teenyat instances logging.
 */
-void tny_init_custom_debug(teenyat *t, TNY_DEBUG system_debug);
+void tny_init_custom_log(teenyat *t, TNY_LOG system_log);
 
 /**
  * @brief

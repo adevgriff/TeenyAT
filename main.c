@@ -14,11 +14,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+#include <inttypes.h>
 
 #include "teenyat.h"
 
 void bus_read(teenyat *t, tny_uword addr, tny_word *data, uint16_t *delay);
 void bus_write(teenyat *t, tny_uword addr, tny_word data, uint16_t *delay);
+void custom_log(teenyat *t, char *msg);
 
 int main(int argc, char *argv[]) {
 	if(argc != 2) {
@@ -28,6 +32,7 @@ int main(int argc, char *argv[]) {
 	FILE *bin_file = fopen(argv[1], "rb");
 	teenyat t;
 	tny_init_from_file(&t, bin_file, bus_read, bus_write);
+	tny_init_custom_log(&t, custom_log);
 
 	for(int i = 0; i < 123456; i++) {
 		tny_clock(&t);
@@ -47,4 +52,11 @@ void bus_write(teenyat *t, tny_uword addr, tny_word data, uint16_t *delay) {
 	*delay = 7;  /* add a delay overhead of 7 cycles */
 
 	return;
+}
+
+void custom_log(teenyat *t, char *msg) {
+	tny_word IR = t->ram[t->reg[TNY_REG_PC].u];
+	int decs = ((IR.instruction.opcode)? 1 : 2);
+	fprintf(stderr, "Unknown opcode (%d) encountered at 0x%04X on cycle %" PRIu64 "\n",
+		        IR.instruction.opcode, t->reg[TNY_REG_PC].u - decs, t->cycle_cnt);
 }
