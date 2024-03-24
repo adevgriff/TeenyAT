@@ -51,6 +51,12 @@
     DLy 31
     lod r4, 'a'
     lod r4, '\n'
+    bts r3, r2 + 3
+    bts r3, r2
+    bts r3, 11
+    btc r3, r2 + 3
+    btc r3, r2
+    btc r3, 11
 
     Psh r4
     CAL PC ; oooh... what could this be used for? >:-)
