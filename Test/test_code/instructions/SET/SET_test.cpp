@@ -2,6 +2,7 @@
 
 #include "teenyat.h"
 #include "test.h"
+#include "utils.h"
 
 void bus_write(teenyat *t, tny_uword addr, tny_word data, uint16_t *delay) {
 
@@ -13,7 +14,8 @@ void bus_read(teenyat *t, tny_uword addr, tny_word *data, uint16_t *delay) {
 int main() {
     /* set up teenyat to set*/
     teenyat t;
-    FILE *bin_file = fopen("./test_code/instructions/SET/SET.bin", "rb");
+    std::string file_string = find_relative_path("SET.bin").generic_string();
+    FILE *bin_file = fopen(file_string.c_str(), "rb");
     if(bin_file != NULL) {
         tny_init_from_file(&t, bin_file, bus_read, bus_write);
         fclose(bin_file);
