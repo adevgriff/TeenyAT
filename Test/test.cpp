@@ -1,11 +1,23 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
-#include <boost/process.hpp>
+#include <stdexcept>
+#include <stdio.h>
+#include <string>
 #include <sstream>
 
 #include "teenyat.h"
 #include "test.h"
+
+#ifdef _WIN64
+#define popen _popen
+#define pclose _pclose
+#endif
+
+#ifdef _WIN32
+#define popen _popen
+#define pclose _pclose
+#endif
 
 typedef struct _test {
     std::string test_path;
@@ -27,22 +39,23 @@ void setup_tests(std::vector<test> *tests) {
 
 }
 
-/* Chat gpt generated */
+/* Chat gpt generated thank you Aero :) */
 std::string getCommandOutput(const std::string& command) {
-    boost::process::ipstream pipe_stream; // Stream for reading the child process' output
-    std::stringstream result;
-
-    // Execute the command and create a child process
-    boost::process::child c(command, boost::process::std_out > pipe_stream);
-
-    // Read the output
-    std::string line;
-    while (pipe_stream && std::getline(pipe_stream, line) && !line.empty())
-        result << line << std::endl;
-
-    c.wait(); // Wait for the process to exit
-
-    return result.str();
+    char buffer[128];
+    std::string result = "";
+    // Execute the command and read results
+    FILE* pipe = popen(command.c_str(), "r");
+    if (!pipe) throw std::runtime_error("popen() failed! uh oh");
+    try {
+        while (fgets(buffer, sizeof buffer, pipe) != NULL) {
+            result += buffer;
+        }
+    } catch (...) {
+        pclose(pipe);
+        throw;
+    }
+    pclose(pipe);
+    return result;
 }
 
 int main(int argc, char* argv[]) {
@@ -54,9 +67,9 @@ int main(int argc, char* argv[]) {
     setup_tests(&tests);
     for(test t : tests) {
         printf("Name: %s     Path: %s\n", t.test_name.c_str(), t.test_path.c_str());
-        std::string command = "./" + t.test_path + "/run";
+        std::string command = t.test_path + "\\run";
         std::string output = getCommandOutput(command.c_str());
-        std::cout << output << std::endl;
+        std::cout << "Output: " << output << std::endl;
         if(output.find(FAILURE_MSG) != std::string::npos) {
             success = false;
             failed_tests.push_back(t.test_name);

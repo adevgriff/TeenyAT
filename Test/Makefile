@@ -1,11 +1,12 @@
 CC := gcc
 CXX := g++
 CFLAGS := -c -I.. -I./include -Os
-CPPFLAGS := -c $(CFLAGS) --std=c++17
+CPPFLAGS := -c $(CFLAGS) --std=c++17 
 LDFLAGS :=
 
 ifeq ($(OS),Windows_NT)
-	LDFLAGS += -s -lopengl32 -lgdi32
+    CFLAGS += -IC:\dev\include
+	LDFLAGS += -s -lopengl32 -lgdi32 
 	RMCMD := rm # Using rm for compatibility with Unix-like environments in PowerShell
 else
 	RMCMD := rm -f
