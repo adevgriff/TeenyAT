@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <string>
 #include <sstream>
-#include <filesystem>
 
 #include "teenyat.h"
 #include "test.h"
@@ -21,7 +20,7 @@
 #endif
 
 typedef struct _test {
-    std::filesystem::path test_path;
+    std::string test_path;
     std::string test_name;
 } test;
 
@@ -33,7 +32,7 @@ void setup_tests(std::vector<test> *tests) {
         test temp;
         temp.test_name = line.substr(0, line.find_first_of(','));
         temp.test_path = line.substr(line.find(',') + 1, line.size());
-        std::string command = "make -C " + temp.test_path.generic_string();
+        std::string command = "make -C " + temp.test_path;
         std::system(command.c_str());
         tests->push_back(temp);
     }
@@ -68,7 +67,7 @@ int main(int argc, char* argv[]) {
     setup_tests(&tests);
     for(test t : tests) {
         printf("Name: %s     Path: %s\n", t.test_name.c_str(), t.test_path.c_str());
-        std::filesystem::path command = t.test_path.generic_string() + "/run";
+        std::string command = t.test_path + "\\run";
         std::string output = getCommandOutput(command.c_str());
         std::cout << "Output: " << output << std::endl;
         if(output.find(FAILURE_MSG) != std::string::npos) {
