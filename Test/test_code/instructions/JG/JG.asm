@@ -3,18 +3,18 @@
 
 !test_one
     cmp rA, 0
+    JG !fail
     JMP !success_one
-    set rB, 0
 
 !test_two
     cmp rA, -1
-    JMP !success_two
-    set rB, 0
+    JG !success_two
+    JMP !fail
 
 !test_three
     cmp rA, 1
+    JG !fail
     JMP !success_three
-    set rB, 0
 
 !success_one
     JMP !test_two
