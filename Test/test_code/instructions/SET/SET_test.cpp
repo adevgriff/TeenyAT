@@ -14,7 +14,8 @@ void bus_read(teenyat *t, tny_uword addr, tny_word *data, uint16_t *delay) {
 int main() {
     /* set up teenyat to set*/
     teenyat t;
-    std::string file_string = find_relative_path("SET.bin").generic_string();
+    std::string file_string = "./test_code/instructions/SET/SET.bin";
+    properPath(file_string);
     FILE *bin_file = fopen(file_string.c_str(), "rb");
     if(bin_file != NULL) {
         tny_init_from_file(&t, bin_file, bus_read, bus_write);
@@ -29,9 +30,9 @@ int main() {
     tny_clock(&t);
    
     if(t.reg[TNY_REG_B].u == 12) {
-         printf(FAILURE_MSG);
+         printf(SUCCESS_MSG);
     } else {
-        printf(SUCCESS_MSG);
+        printf(FAILURE_MSG);
     }
 
     return 0;

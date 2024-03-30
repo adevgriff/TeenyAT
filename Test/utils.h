@@ -1,8 +1,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <filesystem>
+#include <string>
 
-std::filesystem::path find_relative_path(std::string name);
+void properPath(std::string& str);
 
 #endif

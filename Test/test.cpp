@@ -5,24 +5,27 @@
 #include <stdio.h>
 #include <string>
 #include <sstream>
+#include <filesystem>
 
 #include "teenyat.h"
 #include "test.h"
 
-#ifdef _WIN64
-#define popen _popen
-#define pclose _pclose
-#endif
-
-#ifdef _WIN32
-#define popen _popen
-#define pclose _pclose
-#endif
 
 typedef struct _test {
     std::string test_path;
     std::string test_name;
 } test;
+
+
+#if defined(_WIN64) || defined(_WIN32)
+bool isWindows = true;
+#define popen _popen
+#define pclose _pclose
+#else
+bool isWindows = false;  
+#endif
+
+
 
 void setup_tests(std::vector<test> *tests) {
     std::ifstream test_config;
@@ -39,11 +42,20 @@ void setup_tests(std::vector<test> *tests) {
 
 }
 
+void replaceForwardSlash(std::string& str) {
+    size_t pos = 0;
+    while ((pos = str.find('/', pos)) != std::string::npos) {
+        str.replace(pos, 1, "\\");
+        pos += 1;
+    }
+}
+
 /* Chat gpt generated thank you Aero :) */
 std::string getCommandOutput(const std::string& command) {
     char buffer[128];
     std::string result = "";
     // Execute the command and read results
+    std::cout << command.c_str() << std::endl;
     FILE* pipe = popen(command.c_str(), "r");
     if (!pipe) throw std::runtime_error("popen() failed! uh oh");
     try {
@@ -67,7 +79,8 @@ int main(int argc, char* argv[]) {
     setup_tests(&tests);
     for(test t : tests) {
         printf("Name: %s     Path: %s\n", t.test_name.c_str(), t.test_path.c_str());
-        std::string command = t.test_path + "\\run";
+        std::string command = t.test_path + "/run";
+        if(isWindows)  replaceForwardSlash(command);
         std::string output = getCommandOutput(command.c_str());
         std::cout << "Output: " << output << std::endl;
         if(output.find(FAILURE_MSG) != std::string::npos) {

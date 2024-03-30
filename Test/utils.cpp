@@ -1,18 +1,26 @@
 #include <iostream>
+#include <string>
 
 #include "utils.h"
 
-std::filesystem::path find_relative_path(std::string name) {
-    std::filesystem::path p;
-    std::filesystem::path current = "./";
-    // Recursively iterate over the directory and its subdirectories
-    for (const auto& entry : std::filesystem::recursive_directory_iterator(current)) {
-        // Check if the current entry is a file and matches the specified filename
-        if (std::filesystem::is_regular_file(entry) && entry.path().filename() == name) {
-            std::cout << "Found: " << entry.path() << std::endl;
-            p = entry;
-        }
-    }
+#if defined(_WIN64) || defined(_WIN32)
+bool isWindows = true;
+#define popen _popen
+#define pclose _pclose
+#else
+bool isWindows = false;  
+#endif
 
-    return p;
+void replaceForwardSlash(std::string& str) {
+    size_t pos = 0;
+    while ((pos = str.find('/', pos)) != std::string::npos) {
+        str.replace(pos, 1, "\\");
+        pos += 1;
+    }
+}
+
+// All this does is convert the slashes so you can write them however yah want
+void properPath(std::string& str){
+    if(isWindows) replaceForwardSlash(str);
+    return;
 }
