@@ -13,6 +13,7 @@ void bus_read(teenyat *t, tny_uword addr, tny_word *data, uint16_t *delay) {
 
 int main() {
     /* set up teenyat to set*/
+    bool fail = false;
     teenyat t;
     std::string file_string = "./test_code/instructions/SET/SET.bin";
     properPath(file_string);
@@ -27,13 +28,32 @@ int main() {
     }
 
     tny_clock(&t);
+    if(t.reg[TNY_REG_A].u != 1) {
+         printf(FAILURE_MSG);
+         fail = true;
+    } 
     tny_clock(&t);
-   
-    if(t.reg[TNY_REG_B].u == 12) {
-         printf(SUCCESS_MSG);
-    } else {
-        printf(FAILURE_MSG);
-    }
+    if(t.reg[TNY_REG_B].u != 4) {
+         printf(FAILURE_MSG);
+         fail = true;
+    } 
+    tny_clock(&t);
+    if(t.reg[TNY_REG_A].u != t.reg[TNY_REG_B].u) {
+         printf(FAILURE_MSG);
+         fail = true;
+    } 
+    tny_clock(&t);
+    if(t.reg[TNY_REG_B].u != (t.reg[TNY_REG_A].u + 1)) {
+         printf(FAILURE_MSG);
+         fail = true;
+    } 
+    tny_clock(&t);
+    if(t.reg[TNY_REG_A].u != (t.reg[TNY_REG_B].u - 1)) {
+         printf(FAILURE_MSG);
+         fail = true;
+    } 
+
+    if(!fail) printf(SUCCESS_MSG);
 
     return 0;
 }

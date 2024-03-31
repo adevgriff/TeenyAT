@@ -36,6 +36,7 @@ void setup_tests(std::vector<test> *tests) {
         temp.test_name = line.substr(0, line.find_first_of(','));
         temp.test_path = line.substr(line.find(',') + 1, line.size());
         std::string command = "make -C " + temp.test_path;
+        std::cout << command.c_str() << std::endl;
         std::system(command.c_str());
         tests->push_back(temp);
     }
@@ -79,8 +80,12 @@ int main(int argc, char* argv[]) {
     setup_tests(&tests);
     for(test t : tests) {
         printf("Name: %s     Path: %s\n", t.test_name.c_str(), t.test_path.c_str());
-        std::string command = t.test_path + "/run";
-        if(isWindows)  replaceForwardSlash(command);
+        std::string path = t.test_path;
+        std::string run = "/run";
+        std::string command = path.append(run);
+        if(isWindows){
+            replaceForwardSlash(command);
+        }  
         std::string output = getCommandOutput(command.c_str());
         std::cout << "Output: " << output << std::endl;
         if(output.find(FAILURE_MSG) != std::string::npos) {
