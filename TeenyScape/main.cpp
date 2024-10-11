@@ -15,13 +15,13 @@ void drawMapGrid()
 {
     for (int i = 1; i < 256; i++)
     {
-        tigrLine(window, (winWidthConstant - mapWidthConstant - mapRightOffset) * scale,
-                 (((winHeightConstant - mapHeightConstant) / 2) + i) * scale, (winWidthConstant - mapRightOffset) * scale,
-                 (((winHeightConstant - mapHeightConstant) / 2) + i) * scale, tigrRGB(0xff, 0xff, 0xff));
+        tigrLine(window, mapLeftOffset + (mapWidth * i / 256), mapTopOffset,
+                 mapLeftOffset + (mapWidth * i / 256), mapTopOffset + mapHeight,
+                 tigrRGB(0xff, 0xff, 0xff));
 
-        tigrLine(window, (winWidthConstant - mapWidthConstant - mapRightOffset + i) * scale,
-                 ((winHeightConstant - mapHeightConstant) / 2) * scale, (winWidthConstant - mapWidthConstant - mapRightOffset + i) * scale,
-                 (((winHeightConstant - mapHeightConstant) / 2) + mapHeightConstant) * scale, tigrRGB(0xff, 0xff, 0xff));
+        tigrLine(window, mapLeftOffset, mapTopOffset + (mapHeight * i / 256),
+                 mapLeftOffset + mapWidth, mapTopOffset + (mapHeight * i / 256),
+                 tigrRGB(0xff, 0xff, 0xff));
     }
 }
 
@@ -29,10 +29,13 @@ int main(int argc, char *argv[])
 {
     /* database fabulous lavender for our color model */
     initializeTigrWindow();
-    Button *gridToggleButton = createButton(10, 10, 9, "Grid Toggle", gridToggleOnClick, nullptr);
+    Button *gridToggleButton = createButton(0.01, 0.01, 9, "Grid Toggle", gridToggleOnClick, nullptr);
     gridToggleButton->clickData = gridToggleButton;
     while (!tigrClosed(window) && !tigrKeyDown(window, TK_ESCAPE))
     {
+
+        winWidth = window->w;
+        winHeight = window->h;
         int mouseX;
         int mouseY;
         int buttons;

@@ -6,25 +6,24 @@
 
 #include "util.h"
 
-uint16_t winWidthConstant = 400;
-uint16_t winHeightConstant = 260;
+int winWidth = 400;
+int winHeight = 260;
 
-uint16_t mapWidthConstant = 256;
-uint16_t mapHeightConstant = 256;
-uint16_t mapRightOffset = 2;
-
-uint16_t scale = 4;
+int mapWidth = 256;
+int mapHeight = 256;
+int mapLeftOffset = 0;
+int mapTopOffset = 0;
 
 Tigr *window;
 
-bool buttonLeft = true;
+bool buttonNotClicked = true;
 
 int map(int num, int in_min, int in_max, int out_min, int out_max)
 {
   return (int)(num - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-Button *createButton(int x, int y, int size, const char *text, void (*onClick)(void *), void *clickData)
+Button *createButton(double x, double y, int size, const char *text, void (*onClick)(void *), void *clickData)
 {
   Button *button = (Button *)malloc(sizeof(Button));
   button->x = x;
@@ -39,29 +38,33 @@ Button *createButton(int x, int y, int size, const char *text, void (*onClick)(v
 
 void drawButton(Button *button, TPixel textColor)
 {
-  tigrFillRect(window, button->x * scale, button->y * scale,
-               button->size * scale, button->size * scale,
+  tigrFillRect(window, winWidth * button->x, winHeight * button->y,
+               button->size, button->size,
                tigrRGB(0xff, 0xff, 0xff));
   if (button->state)
   {
     int clickedMarkSize = button->size - 3;
-    tigrFillRect(window, (button->x + 2) * scale, (button->y + 2) * scale,
-                 clickedMarkSize * scale, clickedMarkSize * scale,
+    tigrFillRect(window, winWidth * button->x + (button->size / 8),
+                 winHeight * button->y + (button->size / 8), button->size * 6 / 8, button->size * 6 / 8,
                  tigrRGB(0x33, 0x33, 0x33));
   }
-  tigrPrint(window, tfont, (button->x + button->size) * scale, button->y * scale,
+  tigrPrint(window, tfont, winWidth * button->x + button->size, winHeight * button->y,
             textColor, button->text);
 }
 
 void checkButtonClick(Button *button, int mouseX, int mouseY, int buttons)
 {
   bool leftMouse = buttons & 1;
-  if (leftMouse && mouseX >= button->x * scale && mouseX <= (button->x + button->size) * scale &&
-      mouseY >= button->y * scale && mouseY <= (button->y + button->size) * scale)
+  int buttonLeft = winWidth * button->x;
+  int buttonRight = buttonLeft + button->size;
+  int buttonTop = winHeight * button->y;
+  int buttonBottom = buttonTop + button->size;
+  if (leftMouse && mouseX >= buttonLeft && mouseX <= buttonRight &&
+      mouseY >= buttonTop && mouseY <= buttonBottom)
   {
-    if (buttonLeft)
+    if (buttonNotClicked)
     {
-      buttonLeft = false;
+      buttonNotClicked = false;
       if (button->onClick)
       {
         button->onClick(button->clickData);
@@ -70,7 +73,7 @@ void checkButtonClick(Button *button, int mouseX, int mouseY, int buttons)
   }
   else
   {
-    buttonLeft = true;
+    buttonNotClicked = true;
   }
 }
 
@@ -81,21 +84,32 @@ void freeButton(Button *button)
 
 void initializeTigrWindow()
 {
-  window = tigrWindow(winWidthConstant * scale, winHeightConstant * scale,
+  /*Calculate useful sizes and offsets for current opening window size*/
+  mapWidth = winWidth * MAP_SCREEN_WIDTH_RATIO;
+  mapHeight = winHeight * MAP_SCREEN_HEIGHT_RATIO;
+  mapLeftOffset = winWidth - mapWidth - MAP_SCREEN_RIGHT_OFFSET;
+  mapTopOffset = (winHeight - mapHeight) / 2;
+
+  std::cout << mapWidth << " : " << mapHeight << " : " << mapLeftOffset << " : " << mapTopOffset << std::endl;
+  std::cout << MAP_SCREEN_WIDTH_RATIO << " : " << MAP_SCREEN_HEIGHT_RATIO << std::endl;
+
+  window = tigrWindow(winWidth, winHeight,
                       "TeenyScape", TIGR_AUTO);
   tigrClear(window, tigrRGB(0x66, 0x66, 0x77));
-  tigrFillRect(window, (winWidthConstant - mapWidthConstant - mapRightOffset) * scale,
-               ((winHeightConstant - mapHeightConstant) / 2) * scale,
-               mapWidthConstant * scale, mapHeightConstant * scale, tigrRGB(0xdd, 0xbb, 0xff));
+  tigrFillRect(window, mapLeftOffset, mapTopOffset, mapWidth, mapHeight, tigrRGB(0xdd, 0xbb, 0xff));
   tigrUpdate(window);
 }
 
 void tigrWindowClear()
 {
+  /*Calculate useful sizes and offsets for current opening window size*/
+  mapWidth = winWidth * MAP_SCREEN_WIDTH_RATIO;
+  mapHeight = winHeight * MAP_SCREEN_HEIGHT_RATIO;
+  mapLeftOffset = winWidth - mapWidth - MAP_SCREEN_RIGHT_OFFSET;
+  mapTopOffset = (winHeight - mapHeight) / 2;
+
   tigrClear(window, tigrRGB(0x66, 0x66, 0x77));
-  tigrFillRect(window, (winWidthConstant - mapWidthConstant - mapRightOffset) * scale,
-               ((winHeightConstant - mapHeightConstant) / 2) * scale,
-               mapWidthConstant * scale, mapHeightConstant * scale, tigrRGB(0xdd, 0xbb, 0xff));
+  tigrFillRect(window, mapLeftOffset, mapTopOffset, mapWidth, mapHeight, tigrRGB(0xdd, 0xbb, 0xff));
 }
 
 void tigrUtilClean()
