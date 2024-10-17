@@ -1,7 +1,8 @@
 #include <cstdint>
 #include <stdlib.h>
-#include <string.h>
 #include <iostream>
+#include <string.h>
+
 #include "../tigr.h"
 
 #include "util.h"

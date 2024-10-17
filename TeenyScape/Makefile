@@ -18,8 +18,9 @@ all:
 	gcc -c tigr.c -o tigr.o $(CFLAGS) 
 	gcc -c ../teenyat.c -o teenyat.o $(CFLAGS) $(WFLAGS)
 	g++ -c TigrUtils/util.cpp -o util.o $(CPPFLAGS) $(WFLAGS)
+	g++ -c bot.cpp -o bot.o $(CPPFLAGS) $(WFLAGS)
 	g++ -c main.cpp -o main.o $(CPPFLAGS) $(WFLAGS)
-	g++ tigr.o teenyat.o main.o util.o -o tscape $(LDFLAGS)
+	g++ tigr.o teenyat.o main.o util.o bot.o -o tscape $(LDFLAGS)
 
 clean:
 	$(RMCMD) tscape *.o
