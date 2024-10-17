@@ -8,10 +8,9 @@
 #define HEAD_STRETCH (0.2)
 
 #define MAX_DIR_VELOCITY (2.0) /* a scalar based on distance from goal? */
-#define DEFAULT_DIR_ACCELERATION (0.05)
-#define DEFAULT_DIR_DECCELERATION (0.09)
-#define MIN_DIR_VELOCITY (0.05)
-#define DECELERATION_DISTANCE (30)
+#define STEPS_PER_DEGREE (5)
+#define STEPS_TO_360 (360 * STEPS_PER_DEGREE)
+#define SINGLE_STEP_SIZE ( 1.0 / (double(STEPS_PER_DEGREE)))
 
 typedef struct
 {
@@ -28,7 +27,6 @@ typedef struct
     TPixel color;
     double curr_dir;
     double goal_dir;
-    double dir_velocity;
     double speed_ppf; /* pixels per frame */
     double power_used;
     unsigned int ticks_used;

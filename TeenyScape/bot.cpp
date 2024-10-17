@@ -87,9 +87,6 @@ void drawBot(Bot *b)
     char degree_string[20];
     sprintf(degree_string, "%lf", b->curr_dir);
     tigrPrint(window, tfont, mapLeftOffset, mapTopOffset + mapHeight, tigrRGB(0x00, 0x00, 0x00), degree_string);
-    char vel_string[20];
-    sprintf(degree_string, "%lf", b->dir_velocity);
-    tigrPrint(window, tfont, mapLeftOffset + (winWidth * .09), mapTopOffset + mapHeight, tigrRGB(0x00, 0x00, 0x00), degree_string);
 }
 
 void rotateBotCCW(Bot *b, double degrees)
@@ -152,7 +149,6 @@ Bot *createBot(Point center, TPixel color, char *name)
     bot->color = color;
     bot->curr_dir = 0;
     bot->goal_dir = 0;
-    bot->dir_velocity = 0;
     bot->speed_ppf = 0;
     bot->power_used = 0;
     bot->ticks_used = 0;
@@ -181,40 +177,13 @@ void botUpdate(Bot *b)
     {
         diff += 360;
     }
-    std::cout << diff << std::endl;
+
     double absolute = fabs(diff);
 
-    /* if distance is short and velocity small stop */
-    if (absolute < MIN_DIR_VELOCITY && fabs(b->dir_velocity) < MIN_DIR_VELOCITY)
-    {
-        b->dir_velocity = 0;
-        rotateBotCW(b, diff);
-        diff = 0.0;
-        absolute = 0.0;
-    }
-    else if (b->dir_velocity == 0.0)
-    {
-        b->dir_velocity = MIN_DIR_VELOCITY * (diff < 0 ? -1 : 1);
-    }
-    std::cout << b->dir_velocity << std::endl;
+    double direction = (diff < 0 ? 1 : -1);
 
-    /* Apply acceleration */
-    b->dir_velocity += (diff < 0 ? -1 : 1) * DEFAULT_DIR_ACCELERATION;
-
-    /* Decelerate when close to the goal */
-    if (absolute < DECELERATION_DISTANCE)
-    {
-        double scale = absolute / DECELERATION_DISTANCE;
-        b->dir_velocity *= scale; // Slow down proportionally
-    }
-
-    std::cout << b->dir_velocity << std::endl;
-    if (b->dir_velocity > MAX_DIR_VELOCITY)
-        b->dir_velocity = MAX_DIR_VELOCITY;
-    else if (b->dir_velocity < MAX_DIR_VELOCITY * -1)
-    {
-        b->dir_velocity = MAX_DIR_VELOCITY * -1;
-    }
-    std::cout << b->dir_velocity << std::endl;
-    rotateBotCW(b, b->dir_velocity);
+    if(absolute > SINGLE_STEP_SIZE)
+        rotateBotCW(b, SINGLE_STEP_SIZE * direction);
+    else
+        rotateBotCW(b, absolute * direction);
 }
