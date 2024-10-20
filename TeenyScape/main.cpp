@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     Button *gridToggleButton = createButton(0.01, 0.01, 9, "Grid Toggle", gridToggleOnClick, nullptr);
     gridToggleButton->clickData = gridToggleButton;
     Bot *b = createBot({0.5, 0.5}, tigrRGB(0x00, 0xAA, 0x66), "A LARGER TEST NAME THAT SHOULD GET CUT OFF");
-    b->goal_dir = 180;
+    b->goal_dir = 90;
     while (!tigrClosed(window) && !tigrKeyDown(window, TK_ESCAPE))
     {
         winWidth = window->w;

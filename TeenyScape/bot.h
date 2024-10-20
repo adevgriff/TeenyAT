@@ -10,7 +10,7 @@
 #define MAX_DIR_VELOCITY (2.0) /* a scalar based on distance from goal? */
 #define DEFAULT_DIR_ACCELERATION (0.05)
 #define DEFAULT_DIR_DECCELERATION (0.09)
-#define MIN_DIR_VELOCITY (0.05)
+#define MIN_DIR_VELOCITY (0.2)
 #define DECELERATION_DISTANCE (30)
 
 typedef struct

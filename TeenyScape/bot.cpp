@@ -172,7 +172,7 @@ void botUpdate(Bot *b)
     /* Direction */
     double diff = b->goal_dir - b->curr_dir;
 
-    // Normalize `diff` to be within -180 to 180
+    /* Normalize `diff` to be within -180 to 180 */
     if (diff > 180)
     {
         diff -= 360;
@@ -181,40 +181,34 @@ void botUpdate(Bot *b)
     {
         diff += 360;
     }
-    std::cout << diff << std::endl;
-    double absolute = fabs(diff);
 
-    /* if distance is short and velocity small stop */
-    if (absolute < MIN_DIR_VELOCITY && fabs(b->dir_velocity) < MIN_DIR_VELOCITY)
-    {
-        b->dir_velocity = 0;
-        rotateBotCW(b, diff);
-        diff = 0.0;
-        absolute = 0.0;
-    }
-    else if (b->dir_velocity == 0.0)
-    {
-        b->dir_velocity = MIN_DIR_VELOCITY * (diff < 0 ? -1 : 1);
-    }
+    double absolute = fabs(diff);
+    int direction = (diff < 0 ? 1 : -1);
+
     std::cout << b->dir_velocity << std::endl;
 
-    /* Apply acceleration */
-    b->dir_velocity += (diff < 0 ? -1 : 1) * DEFAULT_DIR_ACCELERATION;
-
-    /* Decelerate when close to the goal */
-    if (absolute < DECELERATION_DISTANCE)
+    /* Decelerate when close to the goal and stop when very close */
+    if (absolute < DECELERATION_DISTANCE && absolute > MIN_DIR_VELOCITY)
     {
         double scale = absolute / DECELERATION_DISTANCE;
-        b->dir_velocity *= scale; // Slow down proportionally
+        b->dir_velocity *= scale;
+        if (b->dir_velocity < MIN_DIR_VELOCITY)
+            b->dir_velocity = MIN_DIR_VELOCITY;
+    }
+    else if (absolute <= MIN_DIR_VELOCITY)
+    {
+        b->dir_velocity = 0;
+        rotateBotCW(b, absolute * direction);
+    }
+    else
+    {
+        /* Apply acceleration */
+        b->dir_velocity += DEFAULT_DIR_ACCELERATION;
+
+        if (b->dir_velocity > MAX_DIR_VELOCITY)
+            b->dir_velocity = MAX_DIR_VELOCITY;
     }
 
     std::cout << b->dir_velocity << std::endl;
-    if (b->dir_velocity > MAX_DIR_VELOCITY)
-        b->dir_velocity = MAX_DIR_VELOCITY;
-    else if (b->dir_velocity < MAX_DIR_VELOCITY * -1)
-    {
-        b->dir_velocity = MAX_DIR_VELOCITY * -1;
-    }
-    std::cout << b->dir_velocity << std::endl;
-    rotateBotCW(b, b->dir_velocity);
+    rotateBotCW(b, b->dir_velocity * direction);
 }
