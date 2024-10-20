@@ -149,6 +149,7 @@ Bot *createBot(Point center, TPixel color, char *name)
     bot->color = color;
     bot->curr_dir = 0;
     bot->goal_dir = 0;
+    bot->dir_velocity = 0;
     bot->speed_ppf = 0;
     bot->power_used = 0;
     bot->ticks_used = 0;

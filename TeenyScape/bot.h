@@ -28,6 +28,7 @@ typedef struct
     TPixel color;
     double curr_dir;
     double goal_dir;
+    double dir_velocity;
     double speed_ppf; /* pixels per frame */
     double power_used;
     unsigned int ticks_used;
