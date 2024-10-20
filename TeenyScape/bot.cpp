@@ -87,9 +87,6 @@ void drawBot(Bot *b)
     char degree_string[20];
     sprintf(degree_string, "%lf", b->curr_dir);
     tigrPrint(window, tfont, mapLeftOffset, mapTopOffset + mapHeight, tigrRGB(0x00, 0x00, 0x00), degree_string);
-    char vel_string[20];
-    sprintf(degree_string, "%lf", b->dir_velocity);
-    tigrPrint(window, tfont, mapLeftOffset + (winWidth * .09), mapTopOffset + mapHeight, tigrRGB(0x00, 0x00, 0x00), degree_string);
 }
 
 void rotateBotCCW(Bot *b, double degrees)
@@ -152,7 +149,6 @@ Bot *createBot(Point center, TPixel color, char *name)
     bot->color = color;
     bot->curr_dir = 0;
     bot->goal_dir = 0;
-    bot->dir_velocity = 0;
     bot->speed_ppf = 0;
     bot->power_used = 0;
     bot->ticks_used = 0;
