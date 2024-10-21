@@ -164,7 +164,7 @@ void freeBot(Bot *b)
     free(b);
 }
 
-void botUpdate(Bot *b)
+void directionUpdate(Bot *b)
 {
     /* Direction */
     double diff = b->goal_dir - b->curr_dir;
@@ -206,6 +206,10 @@ void botUpdate(Bot *b)
             b->dir_velocity = MAX_DIR_VELOCITY;
     }
 
-    std::cout << b->dir_velocity << std::endl;
     rotateBotCW(b, b->dir_velocity * direction);
+}
+
+void botUpdate(Bot *b)
+{
+    directionUpdate(b);
 }
