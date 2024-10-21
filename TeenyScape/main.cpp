@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
     gridToggleButton->clickData = gridToggleButton;
     Bot *b = createBot({0.5, 0.5}, tigrRGB(0x00, 0xAA, 0x66), "A LARGER TEST NAME THAT SHOULD GET CUT OFF");
     b->goal_dir = 90;
+    MapLoader map("./maps/canvas.bmp", "./maps/overlay.bmp");
     while (!tigrClosed(window) && !tigrKeyDown(window, TK_ESCAPE))
     {
         winWidth = window->w;
@@ -48,6 +49,8 @@ int main(int argc, char *argv[])
 
         tigrWindowClear();
         drawButton(gridToggleButton, tigrRGB(0x00, 0x00, 0x00));
+
+        drawMapFromLoader(map);
         if (gridToggleButton->state)
         {
             drawMapGrid();

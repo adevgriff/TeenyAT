@@ -117,3 +117,20 @@ void tigrUtilClean()
 {
   tigrFree(window);
 }
+
+void drawMapFromLoader(MapLoader mapLoader)
+{
+  int mapStartX = mapLeftOffset;
+  int mapStartY = mapTopOffset;
+
+  for (int y = 0; y < mapLoader.CANVAS_HEIGHT; y++)
+  {
+    for (int x = 0; x < mapLoader.CANVAS_HEIGHT; x++)
+    {
+      uint8_t r = mapLoader.extract_color(x, y, 0); // red
+      uint8_t g = mapLoader.extract_color(x, y, 1); // green
+      uint8_t b = mapLoader.extract_color(x, y, 2); // blue
+      tigrFillRect(window, mapStartX + x * mapWidth / mapLoader.CANVAS_WIDTH, mapStartY + y * mapHeight / mapLoader.CANVAS_HEIGHT, 5, 5, tigrRGB(r, g, b));
+    }
+  }
+}

@@ -3,6 +3,8 @@
 
 #include <cstdint>
 
+#include "../maploader.h"
+
 #define SCREEN_HORIZONTAL_PARTION_AMOUNT (5)
 
 #define MAP_SCREEN_HEIGHT_RATIO (((1 << SCREEN_HORIZONTAL_PARTION_AMOUNT) - 1) / (double)(1 << SCREEN_HORIZONTAL_PARTION_AMOUNT))
@@ -38,5 +40,6 @@ void freeButton(void *button);
 void initializeTigrWindow();
 void tigrUtilClean();
 void tigrWindowClear();
+void drawMapFromLoader(MapLoader mapLoader);
 
 #endif /* __UTIL_H__ */
