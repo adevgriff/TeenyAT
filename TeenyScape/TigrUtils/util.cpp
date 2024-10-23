@@ -123,6 +123,13 @@ void drawMapFromLoader(MapLoader mapLoader)
   int mapStartX = mapLeftOffset;
   int mapStartY = mapTopOffset;
 
+  int canvas_width = mapWidth / 64;
+  int canvas_height = mapHeight / 64;
+  if(canvas_height < 5|| canvas_width < 5) {
+    canvas_height = 8;
+    canvas_width = 8;
+  }
+
   for (int y = 0; y < mapLoader.CANVAS_HEIGHT; y++)
   {
     for (int x = 0; x < mapLoader.CANVAS_HEIGHT; x++)
@@ -130,7 +137,8 @@ void drawMapFromLoader(MapLoader mapLoader)
       uint8_t r = mapLoader.extract_color(x, y, 0); // red
       uint8_t g = mapLoader.extract_color(x, y, 1); // green
       uint8_t b = mapLoader.extract_color(x, y, 2); // blue
-      tigrFillRect(window, mapStartX + x * mapWidth / mapLoader.CANVAS_WIDTH, mapStartY + y * mapHeight / mapLoader.CANVAS_HEIGHT, 5, 5, tigrRGB(r, g, b));
+      uint8_t a = mapLoader.extract_color(x, y, 3); // alpha
+      tigrFillRect(window, mapStartX + x * mapWidth / mapLoader.CANVAS_WIDTH, mapStartY + y * mapHeight / mapLoader.CANVAS_HEIGHT, canvas_width, canvas_height, tigrRGBA(r, g, b, a));
     }
   }
 }
