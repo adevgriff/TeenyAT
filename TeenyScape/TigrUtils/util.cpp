@@ -126,8 +126,8 @@ void drawMapFromLoader(MapLoader mapLoader)
   int canvas_width = mapWidth / 64;
   int canvas_height = mapHeight / 64;
   if(canvas_height < 5|| canvas_width < 5) {
-    canvas_height = 5;
-    canvas_width = 5;
+    canvas_height = 8;
+    canvas_width = 8;
   }
 
   for (int y = 0; y < mapLoader.CANVAS_HEIGHT; y++)
