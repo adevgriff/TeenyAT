@@ -1,61 +1,97 @@
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <iostream>
-
 #include "bot.h"
-#include "TigrUtils/util.h"
+#include <cmath>
 
-Point computeVector(int ax, int ay, int bx, int by)
+Bot::Bot()
 {
-    Point result = {bx - ax, by - ay};
-    return result;
+    this->pivot.x = 0.5;
+    this->pivot.y = 0.5;
+    this->direction = 0.0;
+
+    this->speed = 0.0;
+
+    this->color = tigrRGB(0xAA, 0x0, 0x0);
 }
 
-double crossProduct(Point A, Point B)
+Bot::Bot(point center_point, double direction)
 {
-    return A.x * B.y - A.y * B.x;
+    this->pivot = center_point;
+    this->direction = direction;
+
+    this->speed = 0.0;
+
+    this->color = tigrRGB(0xA, 0x0, 0x0);
 }
 
-void drawBot(Bot *b)
+Bot::~Bot()
 {
-    /* First need to get the screen pixels of the verticies */
-    int hx = b->head.x * mapWidth + mapLeftOffset;
-    int lx = b->left_shoulder.x * mapWidth + mapLeftOffset;
-    int rx = b->right_shoulder.x * mapWidth + mapLeftOffset;
+}
 
-    int hy = b->head.y * mapHeight + mapTopOffset;
-    int ly = b->left_shoulder.y * mapHeight + mapTopOffset;
-    int ry = b->right_shoulder.y * mapHeight + mapTopOffset;
+void Bot::draw(Tigr *window, Field *field)
+{
+    double x_offset = this->pivot.x;
+    double y_offset = this->pivot.y;
 
-    /* Calculate box around the triangle */
-    int bx0 = hx;
-    int by0 = hy;
+    double dirRad = (this->direction + 90) * M_PI / 180.0;
 
-    int bx1 = hx;
-    int by1 = hy;
+    double centroidToApex = BOT_HEIGHT / 3.0;
+    double centroidToBase = 2.0 * BOT_HEIGHT / 3.0;
 
-    if (bx0 > lx)
-        bx0 = lx;
-    if (by0 > ly)
-        by0 = ly;
-    if (bx0 > rx)
-        bx0 = rx;
-    if (by0 > ry)
-        by0 = ry;
+    // Apex point relative to centroid
+    double apexX = x_offset + centroidToApex * cos(dirRad);
+    double apexY = y_offset - centroidToApex * sin(dirRad); // Negative sin for screen space
 
-    if (bx1 < lx)
-        bx1 = lx;
-    if (by1 < ly)
-        by1 = ly;
-    if (bx1 < rx)
-        bx1 = rx;
-    if (by1 < ry)
-        by1 = ry;
+    // Base center relative to centroid
+    double baseCenterX = x_offset - centroidToBase * cos(dirRad);
+    double baseCenterY = y_offset + centroidToBase * sin(dirRad);
 
-    Point AB = computeVector(hx, hy, lx, ly);
-    Point BC = computeVector(lx, ly, rx, ry);
-    Point CA = computeVector(rx, ry, hx, hy);
+    // Base vertices (perpendicular to direction)
+    double baseDirRad = dirRad + M_PI / 2.0; // Perpendicular to direction
+    double base1X = baseCenterX + (BOT_BASE / 2.0) * cos(baseDirRad);
+    double base1Y = baseCenterY - (BOT_BASE / 2.0) * sin(baseDirRad);
+    double base2X = baseCenterX - (BOT_BASE / 2.0) * cos(baseDirRad);
+    double base2Y = baseCenterY + (BOT_BASE / 2.0) * sin(baseDirRad);
+
+    int x1 = apexX * field->getWidth() + field->getX();
+    int y1 = apexY * field->getHeight() + field->getY();
+
+    int x2 = base1X * field->getWidth() + field->getX();
+    int y2 = base1Y * field->getHeight() + field->getY();
+
+    int x3 = base2X * field->getWidth() + field->getX();
+    int y3 = base2Y * field->getHeight() + field->getY();
+
+    drawFilledTriangle(window, x1, y1, x2, y2, x3, y3);
+}
+
+void Bot::drawFilledTriangle(Tigr *window, int x1, int y1, int x2, int y2, int x3, int y3)
+{
+    int bx0 = x1;
+    int by0 = y1;
+
+    int bx1 = x1;
+    int by1 = y1;
+
+    if (bx0 > x2)
+        bx0 = x2;
+    if (by0 > y2)
+        by0 = y2;
+    if (bx0 > x3)
+        bx0 = x3;
+    if (by0 > y3)
+        by0 = y3;
+
+    if (bx1 < x2)
+        bx1 = x2;
+    if (by1 < y2)
+        by1 = y2;
+    if (bx1 < x3)
+        bx1 = x3;
+    if (by1 < y3)
+        by1 = y3;
+
+    point AB = computeVector(x1, y1, x2, y2);
+    point BC = computeVector(x2, y2, x3, y3);
+    point CA = computeVector(x3, y3, x1, y1);
 
     /* go through each horizontal scanline y coordinate */
     for (int y = by0; y <= by1; y++)
@@ -65,13 +101,13 @@ void drawBot(Bot *b)
         for (int x = bx0; x <= bx1; x++)
         {
             int greater_count = 0;
-            Point p;
+            point p;
             p.x = x;
             p.y = y;
             /* is the point in the triangle */
-            Point AP = computeVector(hx, hy, p.x, p.y);
-            Point BP = computeVector(lx, ly, p.x, p.y);
-            Point CP = computeVector(rx, ry, p.x, p.y);
+            point AP = computeVector(x1, y1, p.x, p.y);
+            point BP = computeVector(x2, y2, p.x, p.y);
+            point CP = computeVector(x3, y3, p.x, p.y);
 
             greater_count += (crossProduct(AB, AP) > 0);
             greater_count += (crossProduct(BC, BP) > 0);
@@ -79,137 +115,54 @@ void drawBot(Bot *b)
 
             if (greater_count % 3 == 0)
             {
-                tigrPlot(window, x, y, b->color);
+                tigrPlot(window, x, y, this->color);
             }
         }
     }
-    tigrPlot(window, b->center.x * mapWidth + mapLeftOffset, b->center.y * mapHeight + mapTopOffset, tigrRGB(0xFF, 0x11, 0x11));
-    char degree_string[20];
-    sprintf(degree_string, "%lf", b->curr_dir);
-    tigrPrint(window, tfont, mapLeftOffset, mapTopOffset + mapHeight, tigrRGB(0x00, 0x00, 0x00), degree_string);
 }
 
-void rotateBotCCW(Bot *b, double degrees)
+point Bot::computeVector(int ax, int ay, int bx, int by)
 {
-    double radians = degrees * (M_PI / 180);
+    point result = {bx - ax, by - ay};
+    return result;
+}
 
-    b->head.x -= b->center.x;
-    b->head.y -= b->center.y;
+double Bot::crossProduct(point a, point b)
+{
+    return a.x * b.y - a.y * b.x;
+}
 
-    b->left_shoulder.x -= b->center.x;
-    b->left_shoulder.y -= b->center.y;
+void Bot::incDirection(double amnt)
+{
+    this->direction += amnt;
+    this->direction = fmod(this->direction, 360.0);
 
-    b->right_shoulder.x -= b->center.x;
-    b->right_shoulder.y -= b->center.y;
-
-    b->head.x = b->head.x * cos(radians) - b->head.y * sin(radians);
-    b->head.y = b->head.x * sin(radians) + b->head.y * cos(radians);
-
-    b->right_shoulder.x = b->right_shoulder.x * cos(radians) - b->right_shoulder.y * sin(radians);
-    b->right_shoulder.y = b->right_shoulder.x * sin(radians) + b->right_shoulder.y * cos(radians);
-
-    b->left_shoulder.x = b->left_shoulder.x * cos(radians) - b->left_shoulder.y * sin(radians);
-    b->left_shoulder.y = b->left_shoulder.x * sin(radians) + b->left_shoulder.y * cos(radians);
-
-    b->head.x += b->center.x;
-    b->head.y += b->center.y;
-
-    b->left_shoulder.x += b->center.x;
-    b->left_shoulder.y += b->center.y;
-
-    b->right_shoulder.x += b->center.x;
-    b->right_shoulder.y += b->center.y;
-
-    b->curr_dir += degrees;
-    while (b->curr_dir > 360.0)
+    // If the angle is negative, adjust to wrap into [0, 360)
+    if (this->direction < 0)
     {
-        b->curr_dir -= 360;
-    }
-
-    while (b->curr_dir < 0.0)
-    {
-        b->curr_dir += 360;
+        this->direction += 360.0;
     }
 }
 
-void rotateBotCW(Bot *b, double degrees)
+void Bot::update()
 {
-    rotateBotCCW(b, -1 * degrees);
+    moveCenter(this->speed);
 }
 
-Bot *createBot(Point center, TPixel color, char *name)
+void Bot::moveCenter(double amnt)
 {
-    Bot *bot = (Bot *)malloc(sizeof(Bot));
-    bot->center = center;
-    bot->head.x = bot->center.x;
-    bot->head.y = bot->center.y - (BOT_SIZE * (1 - BOT_BASE_BIAS)) - (HEAD_STRETCH * BOT_SIZE);
-    bot->left_shoulder.x = bot->center.x - (BOT_SIZE / 2);
-    bot->right_shoulder.x = bot->center.x + (BOT_SIZE / 2);
-    bot->left_shoulder.y = bot->right_shoulder.y = bot->center.y + (BOT_SIZE * BOT_BASE_BIAS);
-    bot->color = color;
-    bot->curr_dir = 0;
-    bot->goal_dir = 0;
-    bot->dir_velocity = 0;
-    bot->speed_ppf = 0;
-    bot->power_used = 0;
-    bot->ticks_used = 0;
-    bot->points = 0;
-    bot->name = strndup(name, 10);
-    return bot;
+    double dirRad = (this->direction + 90) * M_PI / 180.0;
+
+    this->pivot.x += amnt * cos(dirRad);
+    this->pivot.y -= amnt * sin(dirRad);
 }
 
-void freeBot(Bot *b)
+void Bot::setSpeed(double amnt)
 {
-    free(b->name);
-    free(b);
+    this->speed = amnt;
 }
 
-void directionUpdate(Bot *b)
+void Bot::setColor(TPixel color)
 {
-    /* Direction */
-    double diff = b->goal_dir - b->curr_dir;
-
-    /* Normalize `diff` to be within -180 to 180 */
-    if (diff > 180)
-    {
-        diff -= 360;
-    }
-    else if (diff < -180)
-    {
-        diff += 360;
-    }
-
-    double absolute = fabs(diff);
-    int direction = (diff < 0 ? 1 : -1);
-
-    std::cout << b->dir_velocity << std::endl;
-
-    /* Decelerate when close to the goal and stop when very close */
-    if (absolute < DECELERATION_DISTANCE && absolute > MIN_DIR_VELOCITY)
-    {
-        double scale = absolute / DECELERATION_DISTANCE;
-        b->dir_velocity *= scale;
-        if (b->dir_velocity < MIN_DIR_VELOCITY)
-            b->dir_velocity = MIN_DIR_VELOCITY;
-    }
-    else if (absolute <= MIN_DIR_VELOCITY)
-    {
-        b->dir_velocity = 0;
-        rotateBotCW(b, absolute * direction);
-    }
-    else
-    {
-        /* Apply acceleration */
-        b->dir_velocity += DEFAULT_DIR_ACCELERATION;
-
-        if (b->dir_velocity > MAX_DIR_VELOCITY)
-            b->dir_velocity = MAX_DIR_VELOCITY;
-    }
-
-    rotateBotCW(b, b->dir_velocity * direction);
-}
-
-void botUpdate(Bot *b)
-{
-    directionUpdate(b);
+    this->color = color;
 }

@@ -3,7 +3,9 @@
 #include "tigr.h"
 
 #include "TigrUtils/util.h"
+#include "field.h"
 #include "bot.h"
+#include "TigrUtils/image.h"
 
 void gridToggleOnClick(void *data)
 {
@@ -30,36 +32,51 @@ int main(int argc, char *argv[])
 {
     /* database fabulous lavender for our color model */
     initializeTigrWindow();
-    Button *gridToggleButton = createButton(0.01, 0.01, 9, "Grid Toggle", gridToggleOnClick, nullptr);
-    gridToggleButton->clickData = gridToggleButton;
-    Bot *b = createBot({0.5, 0.5}, tigrRGB(0x00, 0xAA, 0x66), "A LARGER TEST NAME THAT SHOULD GET CUT OFF");
-    b->goal_dir = 90;
-    MapLoader map("./maps/canvas.bmp", "./maps/overlay.bmp");
+    Field field(256, 256, 0.20, 0.01, window);
+    Bot b;
+    Bot b2;
+    b2.setColor(tigrRGB(0x0, 0xAA, 0xBB));
+    Bot b3;
+    b3.setColor(tigrRGB(0XFF, 0x66, 0x22));
+
+    b3.setSpeed(0.0003);
+    b.setSpeed(0.0006);
+
+    /* Temp image testing */
+    Image img("maps/canvas.bmp");
+    std::cout << img.isLoaded() << std::endl;
+    img.resize(500, 500);
+
     while (!tigrClosed(window) && !tigrKeyDown(window, TK_ESCAPE))
     {
-        winWidth = window->w;
-        winHeight = window->h;
+        if (winWidth != window->w || winHeight != window->h)
+        {
+            winWidth = window->w;
+            winHeight = window->h;
+            field.update(window);
+        }
+
+        b.incDirection(0.2);
+        b2.incDirection(0.5);
+        b.update();
+        b2.update();
+        b3.update();
+
         int mouseX;
         int mouseY;
         int buttons;
         tigrMouse(window, &mouseX, &mouseY, &buttons);
-        checkButtonClick(gridToggleButton, mouseX, mouseY, buttons);
-
-        botUpdate(b);
-
         tigrWindowClear();
-        drawButton(gridToggleButton, tigrRGB(0x00, 0x00, 0x00));
+        field.draw(window);
+        img.draw(window, 10, 20, 600, 300);
 
-        drawMapFromLoader(map);
-        if (gridToggleButton->state)
-        {
-            drawMapGrid();
-        }
-        drawBot(b);
+        b.draw(window, &field);
+        b2.draw(window, &field);
+        b3.draw(window, &field);
+
         tigrUpdate(window);
     }
 
-    freeBot(b);
     tigrFree(window);
     return EXIT_SUCCESS;
 }

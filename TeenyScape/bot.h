@@ -1,47 +1,63 @@
 #ifndef __BOT_H__
 #define __BOT_H__
 
+#define BOT_BASE 0.02
+#define BOT_HEIGHT 0.03
+
 #include "tigr.h"
 
-#define BOT_SIZE (0.02)
-#define BOT_BASE_BIAS (0.3) /* how far from center the base of the triangle is initially setup as a percentage of bot size */
-#define HEAD_STRETCH (0.2)
+#include "field.h"
 
-#define MAX_DIR_VELOCITY (2.0) /* a scalar based on distance from goal? */
-#define DEFAULT_DIR_ACCELERATION (0.05)
-#define DEFAULT_DIR_DECCELERATION (0.09)
-#define MIN_DIR_VELOCITY (0.2)
-#define DECELERATION_DISTANCE (30)
-
-typedef struct
+typedef struct _point
 {
     double x;
     double y;
-} Point;
+} point;
 
-typedef struct
+class Bot
 {
-    Point head;
-    Point left_shoulder;
-    Point right_shoulder;
-    Point center;
+
+public:
+    /**
+     * @brief creates a new bot in the center of the play area;
+     *
+     */
+    Bot();
+
+    /**
+     * @brief creates a new bot positioned where needed
+     *
+     * @param center_point this where the pivot point of the bot should be
+     * @param direction this is the direction the bot should be facing in degrees 0 being top of screen
+     */
+    Bot(point center_point, double direction);
+    ~Bot();
+
+    /**
+     * @brief draws bot where it is at
+     *
+     */
+    void draw(Tigr *window, Field *field);
+
+    void update();
+
+    void incDirection(double amnt);
+
+    void setSpeed(double amnt);
+
+    void setColor(TPixel color);
+
+private:
+    point pivot;
+    double direction;
+    double speed;
+
     TPixel color;
-    double curr_dir;
-    double goal_dir;
-    double dir_velocity;
-    double speed_ppf; /* pixels per frame */
-    double power_used;
-    unsigned int ticks_used;
-    unsigned int points;
-    char *name;
-} Bot;
 
-void drawBot(Bot *b);
-void freeBot(Bot *b);
-void rotateBotCCW(Bot *b, double degrees);
-void rotateBotCW(Bot *b, double degrees);
-void botUpdate(Bot *b);
-double getDirection(Bot *b);
-Bot *createBot(Point center, TPixel color, char *name);
+    void drawFilledTriangle(Tigr *window, int x1, int y1, int x2, int y2, int x3, int y3);
+    point computeVector(int ax, int ay, int bx, int by);
+    double crossProduct(point a, point b);
+    void moveCenter(double amnt);
+};
 
-#endif /* __BOT_H__ */
+#endif /* __BOT_H__*/
