@@ -6,6 +6,9 @@
 #include <vector>
 #include <cstdint>
 
+#include "tigr.h"
+#include "TigrUtils/image.h"
+
 #define DEFAULT_SPACE 0
 #define OPEN_SPACE 1
 #define BLOCKED_SPACE 2
@@ -20,11 +23,16 @@ public:
     static const int CANVAS_WIDTH = 256;
     static const int CANVAS_HEIGHT = 256;
 
-private:
-    void process_image(const char* image_path, std::vector<std::vector<uint16_t>>& image_data);
+    void drawBackground(Tigr *window, int x, int y, int w, int h);
+    void drawForeground(Tigr *window, int x, int y, int w, int h);
 
+private:
     std::vector<std::vector<uint16_t>> canvas_data;
     std::vector<std::vector<uint16_t>> overlay_data;
+    Tigr *img;
+    Tigr *foreground_img;
+    int img_w;
+    int img_h;
 };
 
 #endif // MAPLOADER_H

@@ -6,32 +6,19 @@
  * Overlay = Map to contain underlying information about the scene.
  */
 
+#include "maploader.h"
+
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <cstdint>
+#include "stb_image.h"
+#include "TigrUtils/util.h"
 
 // Macros to define space information on the overlay
 #define DEFAULT_SPACE 0
 #define OPEN_SPACE 1
 #define BLOCKED_SPACE 2
-
-class MapLoader {
-public:
-    MapLoader(const char* canvas_path, const char* overlay_path);
-
-    uint8_t extract_color(int x, int y, int c, bool is_overlay = false);
-    uint8_t get_overlay(int x, int y);
-
-    static const int CANVAS_WIDTH = 256;
-    static const int CANVAS_HEIGHT = 256;
-
-private:
-    void process_image(const char* image_path, std::vector<std::vector<uint32_t>>& image_data);
-
-    std::vector<std::vector<uint32_t>> canvas_data;
-    std::vector<std::vector<uint32_t>> overlay_data;
-};
 
 /**
  * MapLoader constructor. Initializes the canvas and overlay
@@ -40,54 +27,63 @@ private:
  * @param canvas_path Path to 32-bit BMP to be loaded as main canvas.
  * @param overlay_path Path to 32-bit BMP to be loaded as overlay.
  */
-MapLoader::MapLoader(const char* canvas_path, const char* overlay_path) {
-    process_image(canvas_path, canvas_data);
-    process_image(overlay_path, overlay_data);
-}
+MapLoader::MapLoader(const char *canvas_path, const char *overlay_path)
+{
 
-/**
- * Process the image and load data into given vector(image_data).
- * 
- * @param image_path Path to 32-bit BMP to be processed.
- * @param image_data Vector to store pixel data.
- */
-void MapLoader::process_image(const char* image_path, std::vector<std::vector<uint32_t>>& image_data) {
-    std::ifstream file(image_path, std::ios::binary);
-    if (!file) {
-        std::cerr << "Error: Cannot open file.\n";
-        return;
+    // Load the image using stb_image
+    int width, height, channels;
+    unsigned char *data = stbi_load(canvas_path, &width, &height, &channels, 4); // Force 4 channels (RGBA)
+    if (!data)
+    {
+        fprintf(stderr, "Failed to load image: %s\n", canvas_path);
     }
 
-    // Read the BMP header to get the offset to the pixel data
-    uint8_t header[54]; // Standard BMP header is 54 bytes
-    file.read(reinterpret_cast<char*>(header), sizeof(header));
+    this->img = tigrBitmap(width, height);
+    this->img_w = width;
+    this->img_h = height;
 
-    // Extract the offset to pixel data from the header (bytes 10-13)
-    uint32_t dataOffset = *reinterpret_cast<uint32_t*>(&header[10]);
-
-    // Move to the pixel data
-    file.seekg(dataOffset, std::ios::beg);
-
-    const int bytesPerPixel = 4; // 32 bits per pixel
-
-    image_data.resize(CANVAS_HEIGHT, std::vector<uint32_t>(CANVAS_WIDTH));
-
-    const int rowSize = CANVAS_WIDTH * bytesPerPixel;
-    std::vector<uint8_t> rowData(rowSize);
-
-    for (int y = 0; y < CANVAS_HEIGHT; y++) {
-        file.read(reinterpret_cast<char*>(rowData.data()), rowSize);
-        for (int x = 0; x < CANVAS_WIDTH; x++) {
-            uint8_t* pixelPtr = rowData.data() + x * bytesPerPixel;
-            uint8_t b = pixelPtr[0];
-            uint8_t g = pixelPtr[1];
-            uint8_t r = pixelPtr[2];
-            uint8_t a = pixelPtr[3];
-
-            uint32_t pixel = (a << 24) | (r << 16) | (g << 8) | b;
-            image_data[CANVAS_HEIGHT - y - 1][x] = pixel; // Flip vertically
+    // Copy the RGBA data into the Tigr bitmap
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            int index = (y * width + x) * 4;
+            TPixel color;
+            color.r = data[index];
+            color.g = data[index + 1];
+            color.b = data[index + 2];
+            color.a = data[index + 3];
+            tigrPlot(this->img, x, y, color);
         }
     }
+
+    stbi_image_free(data);
+
+    // Load the image using stb_image
+    data = stbi_load(overlay_path, &width, &height, &channels, 4); // Force 4 channels (RGBA)
+    if (!data)
+    {
+        fprintf(stderr, "Failed to load image: %s\n", overlay_path);
+    }
+
+    this->foreground_img = tigrBitmap(width, height);
+
+    // Copy the RGBA data into the Tigr bitmap
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            int index = (y * width + x) * 4;
+            TPixel color;
+            color.r = data[index];
+            color.g = data[index + 1];
+            color.b = data[index + 2];
+            color.a = data[index + 3];
+            tigrPlot(this->foreground_img, x, y, color);
+        }
+    }
+
+    stbi_image_free(data);
 }
 
 /**
@@ -148,4 +144,12 @@ uint8_t MapLoader::get_overlay(int x, int y) {
         default:
             return DEFAULT_SPACE;
     }
+}
+
+void MapLoader::drawBackground(Tigr *window, int x, int y, int width, int height)
+{
+}
+
+void MapLoader::drawForeground(Tigr *window, int x, int y, int width, int height)
+{
 }
