@@ -22,10 +22,11 @@ all:
 	g++ -c maploader.cpp -o maploader.o $(CPPFLAGS) $(WFLAGS)
 	g++ -c field.cpp -o field.o $(CPPFLAGS) $(WFLAGS)
 	g++ -c TigrUtils/image.cpp -o image.o $(CPPFLAGS) $(WFLAGS)
+	g++ -c TigrUtils/button.cpp -o button.o $(CPPFLAGS) $(WFLAGS)
 	g++ -c bot.cpp -o bot.o $(CPPFLAGS) $(WFLAGS)
 	g++ -c main.cpp -o main.o $(CPPFLAGS) $(WFLAGS)
 	g++ -c stb_image.c -o stb_image.o $(CPPFLAGS) $(WFLAGS)
-	g++ tigr.o teenyat.o main.o util.o bot.o maploader.o field.o image.o stb_image.o -o tscape $(LDFLAGS)
+	g++ tigr.o teenyat.o main.o util.o bot.o maploader.o field.o image.o button.o stb_image.o -o tscape $(LDFLAGS)
 
 clean:
 	# Remove all generated files

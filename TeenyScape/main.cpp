@@ -6,13 +6,12 @@
 #include "field.h"
 #include "bot.h"
 #include "TigrUtils/image.h"
+#include "TigrUtils/button.h"
 
-void gridToggleOnClick(void *data)
+typedef struct _button_test_struct
 {
-    std::cout << "button clicked" << std::endl;
-    Button *button = (Button *)data;
-    button->state = !button->state;
-}
+    std::string test_msg;
+} button_test_struct;
 
 void drawMapGrid()
 {
@@ -26,6 +25,14 @@ void drawMapGrid()
                  mapLeftOffset + mapWidth, mapTopOffset + (mapHeight * i / 256),
                  tigrRGB(0xff, 0xff, 0xff));
     }
+}
+
+void button_test_callback(void *button, void *data)
+{
+    button_test_struct *d = (button_test_struct *)data;
+    Button *b = (Button *)button;
+
+    std::cout << d->test_msg << std::endl;
 }
 
 int main(int argc, char *argv[])
@@ -47,6 +54,13 @@ int main(int argc, char *argv[])
     std::cout << img.isLoaded() << std::endl;
     img.resize(500, 500);
 
+    /* Button testing */
+    button_test_struct tstruct;
+    tstruct.test_msg = "this is a test message";
+    Button button(10, 10, 50, 20);
+    button.setData((void *)&tstruct);
+    button.setCallback(button_test_callback);
+
     while (!tigrClosed(window) && !tigrKeyDown(window, TK_ESCAPE))
     {
         if (winWidth != window->w || winHeight != window->h)
@@ -62,13 +76,12 @@ int main(int argc, char *argv[])
         b2.update();
         b3.update();
 
-        int mouseX;
-        int mouseY;
-        int buttons;
-        tigrMouse(window, &mouseX, &mouseY, &buttons);
+        button.update(window);
+
         tigrWindowClear();
         field.draw(window);
         img.draw(window, 10, 20, 600, 300);
+        button.draw(window);
 
         b.draw(window, &field);
         b2.draw(window, &field);

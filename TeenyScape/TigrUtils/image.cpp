@@ -98,3 +98,9 @@ Tigr *Image::scaleBitmap(Tigr *src, int newWidth, int newHeight)
 }
 
 bool Image::isLoaded() { return this->loaded; }
+
+void Image::setLocation(int x, int y)
+{
+    this->x = x;
+    this->y = y;
+}
